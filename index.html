@@ -3,46 +3,77 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Code Journing</title>
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="weather-app-main/assets/images/favicon-32x32.png">
   <link rel="stylesheet" href="dist/output.css">
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,200..800&family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap" rel="stylesheet">
+  
+
+  <title>Frontend Mentor | Weather app</title>
+
+  <style>
+    .attribution { font-size: 11px; text-align: center; }
+    .attribution a { color: hsl(228, 45%, 44%) #2d1c9c #aeaeb7;  }
+    .heading {letter-spacing: 0.1rem; line-height: 3.5rem;}
+  </style>
 </head>
-<body class="bg-gray-950 text-white">
-  <header class="flex flex-col gap-y-5 text-center mt-16">
-    <div class="text-blue-400 text-sm font-semibold rounded-full border-gray-700 bg-gray-800 border w-64 m-auto p-0.5">< / > Frontend Mentor Challenges</div>
-    <h1 class="font-extrabold text-5xl text-gray-200 md:text-6xl">My Code Journing</h1>
-    <p class="text-lg text-gray-400">A collection of designs I have solved on Frontend Mentor.</p>
+<body class="font-['DM_Sans'] text-white bg-[#09032d] m-0 p-5 md:text-[1.125rem]">
+  <header>
+    <div class="flex flex-wrap justify-between content-center">
+      <img class="w-31" src="weather-app-main/assets/images/logo.svg" alt="Weather Logo">
+      <div class="cursor-pointer bg-[#3d3b5e] flex justify-center gap-x-2 w-25 content-center py-2 rounded-md">
+        <img src="weather-app-main/assets/images/icon-units.svg" alt="Setting Icon">
+        <span class="text-[0.75rem]">Units</span>
+        <img  src="weather-app-main/assets/images/icon-dropdown.svg" alt="Dropdown Icon">
+      </div>
+    </div>
+    <h1 class="heading font-['Bricolage_Grotesque'] font-bold text-[2.8rem] text-center mt-15"><span>How's the </span><span class="block">sky looking</span> today?</h1>
+    <div class="mt-10 flex flex-col gap-y-3">
+      <div class="bg-[#3d3b5e] flex rounded-xl p-3 gap-x-4 content-center hover:opacity-90">
+        <img class="ml-3" src="weather-app-main/assets/images/icon-search.svg" alt="Search Icon">
+        <input class="bg-transparent flex-1 text-[1.2rem] caret-white outline-none border-none placeholder:text-[#aeaeb7]" type="text" placeholder="Search for a place...">
+      </div>
+      <button class="bg-[#4455da] text-[1.2rem] py-3 cursor-pointer rounded-xl w-full border-0 hover:opacity-90 focus:outline-2 focus:outline-[#4455da] focus:border-2 focus:border-black">Search</button>
+    </div>
   </header>
-  <main class="grid grid-cols-1 gap-10 content-center justify-center p-10 md:grid-cols-1 md:justify-between lg:grid-cols-2 xl:grid-cols-3">
-  </main>
-  <footer class="pulse flex justify-around bg-[#21999933] py-10 flex-wrap animate-pulse">
-    <div class="flex flex-col gap-y-5">
-      <h1 class="text-white font-bold text-3xl">Site Menu</h1>
-      <a href="#" class="cursor-pointer hover:opacity-70 visited:text-amber-500">About Me</a>
-      <a href="#" class="cursor-pointer hover:opacity-70 visited:text-amber-500">My Skills</a>
-      <a href="#" class="cursor-pointer hover:opacity-70 visited:text-amber-500"><span class="hidden md:inline">E-mail:</span>issaabulwaris212@gmail.com </a>
-      <a href="#" class="cursor-pointer hover:opacity-70 visited:text-amber-500">Phone No.:08038257481</a>
-    </div>
 
-    <div class="flex flex-col gap-y-5">
-      <h1 class="text-white font-bold text-3xl">Contact</h1>
-      <a href="#" class="cursor-pointer hover:opacity-70 visited:text-amber-500">Linkdin</a>
-      <a href="#" class="cursor-pointer hover:opacity-70 visited:text-amber-500">Twitter</a>
-      <a href="#" class="cursor-pointer hover:opacity-70 visited:text-amber-500">Discord</a>
-      <a href="#" class="cursor-pointer hover:opacity-70 visited:text-amber-500">Github</a>
-    </div>
+  <section class="mt-8">
+    <div>
+      <div class="relative">
+        <div class="absolute flex flex-col content-center top-0 left-0 right-0 bottom-0 bg-red-500">
+          <div class="m-auto flex flex-col text-center mt-10">
+            <h3 class="text-2xl">Berlin, Germany</h3>
+            <span class="text-[#aeaeb7]">Tuesday Aug 5, 2025</span>
+          </div>
+          <div class="m-auto flex content-center gap-x-8">
+            <img src="weather-app-main/assets/images/icon-sunny.webp" alt="Sunny icon" class="w-30">
+            <h1 class="font-semibold text-[4.5rem] pt-2">20<sup>o</sup></h1>
+          </div>
+        </div>
+        <img class="m-auto" src="weather-app-main/assets/images/bg-today-small.svg" alt="Background Small">
+      </div>
+      <div>
 
-    <div class="flex flex-col gap-y-5">
-      <h1 class="text-white font-bold text-3xl">More</h1>
-      <a href="#" class="cursor-pointer hover:opacity-70 visited:text-amber-500">Whatsapp</a>
-      <a href="#" class="cursor-pointer hover:opacity-70 visited:text-amber-500">Telegram</a>
-      <a href="#" class="cursor-pointer hover:opacity-70 visited:text-amber-500">Workshop</a>
-      <a href="/" class="cursor-pointer hover:opacity-70 visited:text-amber-500">Support Me</a>
-    </div>
-  </footer>
+      </div>
+      <div>
+        <h1>Daily forecast</h1>
+        <div>
 
-  <script type="module" src="src/index.js"></script>
+        </div>
+      </div>
+    </div>
+    <div></div>
+  </section>
+
+  <!-- <footer>
+    <div class="attribution">
+      Challenge by <a href="https://www.frontendmentor.io?ref=challenge">Frontend Mentor</a>. 
+      Coded by <a href="#">Issa Abdulwaris Atere</a>.
+    </div>
+  </footer> -->
 </body>
 </html>
