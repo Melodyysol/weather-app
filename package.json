@@ -20,6 +20,7 @@
     "magic-string": "^0.30.21",
     "mri": "^1.2.0",
     "node-addon-api": "^7.1.1",
+    "openmeteo": "^1.2.3",
     "picocolors": "^1.1.1",
     "picomatch": "^4.0.3",
     "source-map-js": "^1.2.1",
