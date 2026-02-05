@@ -98,4 +98,30 @@ function dailyForecastFun(response) {
   return dailyForecastHTML;
 }
 
-export { getWeatherDescription, extralInfomation, dailyForecastFun };
+function hourlyForecastFun(response) {
+  let hourlyForecastHTML = '';
+  let hourlyForecast = response.hourly;
+  for (let i = 0; i < 8; i++) {
+    const time = hourlyForecast.time[i];
+    const date = new Date(time);
+    const options = { hour: 'numeric', hour12: true };
+    const hour = date.toLocaleTimeString('en-US', options);
+    const temperature = hourlyForecast.temperature_2m[i].toFixed(0);
+    const weatherCode = hourlyForecast.weathercode[i];
+    const weatherDescription = getWeatherDescription(weatherCode);
+    console.log(hour, temperature, weatherCode, weatherDescription);
+    hourlyForecastHTML += `
+      <div class="bg-[#3d3b5e] flex justify-between content-center px-2 rounded-md border border-gray-600">
+        <div class="flex items-center py-2 content-center gap-x-2">
+          <img src="weather-app-main/assets/images/icon-${weatherDescription}.webp" alt="${weatherDescription} icon" class="w-10">
+          <span class="text-[0.85rem]">${hour}</span>
+        </div>
+        <span class="text-[0.85rem] pt-5">${temperature}&deg;</span>
+      </div>
+    `;
+  }
+
+  return hourlyForecastHTML;
+}
+
+export { getWeatherDescription, extralInfomation, dailyForecastFun, hourlyForecastFun };

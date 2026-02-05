@@ -1,6 +1,6 @@
 import { pageHead } from "./shared/weatherHeader.js";
 import { response, city, country } from "./data/weather-api.js";
-import { getWeatherDescription, extralInfomation, dailyForecastFun } from "./data/weather.js";
+import { getWeatherDescription, extralInfomation, dailyForecastFun, hourlyForecastFun } from "./data/weather.js";
 
 document.querySelector('header').innerHTML = pageHead()
 
@@ -54,4 +54,5 @@ export function renderWeatherPage() {
   `
 
   document.querySelector('.js-weather-cont').innerHTML = weatherHTML;
+  document.querySelector('.js-hourly-cont').innerHTML = hourlyForecastFun(response);
 }

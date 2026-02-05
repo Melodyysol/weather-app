@@ -13,7 +13,7 @@ async function getWeatherByCityName(cityName){
       city = geocoding.results[0].name;
       country = geocoding.results[0].country;
       const {latitude, longitude} = geocoding.results[0];
-      const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true&daily=weathercode,temperature_2m_max,temperature_2m_min&hourly=temperature_2m,apparent_temperature,relative_humidity_2m,wind_speed_10m,precipitation&windspeed_unit=mph&precipitation_unit=inch&timezone=auto`;
+      const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true&daily=weathercode,temperature_2m_max,temperature_2m_min&hourly=weathercode,temperature_2m,apparent_temperature,relative_humidity_2m,wind_speed_10m,precipitation&windspeed_unit=mph&precipitation_unit=inch&timezone=auto`;
       const weatherResponse = await fetch(weatherUrl)
         .then(response => response.json())
         .then(weatherData => {
