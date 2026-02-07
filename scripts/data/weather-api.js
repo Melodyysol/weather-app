@@ -1,8 +1,12 @@
+import { errorState } from "../error-state.js";
+
 let response = {};
 let city = '';
 let country = '';
+let isRefresh = false
 
-async function getWeatherByCityName(cityName){
+
+async function getWeatherByCityName(cityName = 'Ilorin') {
   const geocodingUrl = `https://geocoding-api.open-meteo.com/v1/search?name=${cityName}&count=1`;
   const geocodingResponse =await fetch(geocodingUrl)
     .then(response => response.json())
@@ -21,6 +25,15 @@ async function getWeatherByCityName(cityName){
         });
       response = weatherResponse;
       return response;
+    }).catch(error => {
+      console.log('Uncaught error. Pleaase check your internet.', error)
+      const cityName = document.querySelector('.js-search-input').value;
+      if (!isRefresh && cityName.length > 2) {
+        document.querySelector('.js-section-1').innerHTML = errorState()
+        isRefresh = true
+      }else if(cityName.length < 3) {
+        alert(`Please type the place to be searched. At least three letters word`)
+      }
     })
 }
 

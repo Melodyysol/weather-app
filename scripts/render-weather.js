@@ -1,6 +1,7 @@
 import { pageHead } from "./shared/weatherHeader.js";
-import { response, city, country } from "./data/weather-api.js";
+import { response, city, country, getWeatherByCityName } from "./data/weather-api.js";
 import { getWeatherDescription, extralInfomation, dailyForecastFun, hourlyForecastFun } from "./data/weather.js";
+import { errorState } from "./error-state.js";
 
 document.querySelector('header').innerHTML = pageHead()
 
@@ -12,7 +13,7 @@ export function renderWeatherPage() {
   let options = { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' };
   let formattedDate = dateObj.toLocaleDateString('en-US', options);
 
-// Usage in your fetch
+  // Usage in your fetch
   const weatherCode = response.current_weather.weathercode;
   const weatherDescription = getWeatherDescription(weatherCode);
 
@@ -56,3 +57,41 @@ export function renderWeatherPage() {
   document.querySelector('.js-weather-cont').innerHTML = weatherHTML;
   document.querySelector('.js-hourly-cont').innerHTML = hourlyForecastFun(response);
 }
+
+document.querySelector('.js-search-input').addEventListener('input', async (event) => {
+  const searchSuggestion = document.querySelector('.js-search-suggestion');
+  if (event.target.value.length > 1) {
+    searchSuggestion.style.display = 'block';
+  } else {
+    searchSuggestion.style.display = 'none';
+  }
+
+  let cityName = event.target.value;
+  if (cityName.length > 1) {
+    const geocodingUrl = `https://geocoding-api.open-meteo.com/v1/search?name=${cityName}&count=15`;
+    fetch(geocodingUrl).then(response => response.json())
+      .then(async geocoding => {
+        if (!geocoding.results || geocoding.results.length === 0) {
+          throw new Error("City not found");
+        }
+        geocoding.results = geocoding.results.filter(result => result.country !== undefined);
+        document.querySelector('.js-search-suggestion').innerHTML = '';
+        for (let i = 0; i < geocoding.results.length; i++) {
+          const suggestionItem = document.createElement('p');
+          suggestionItem.textContent = `${geocoding.results[i].name}, ${geocoding.results[i].admin1}, ${geocoding.results[i].country}`;
+          suggestionItem.classList.add('js-search-suggestion-item', 'text-[0.85rem]', 'py-2', 'px-3', 'cursor-pointer', 'hover:bg-[#2121309a]');
+          // document.querySelector('.js-search-suggestion').innerHTML += suggestionItem.outerHTML;
+          document.querySelector('.js-search-suggestion').appendChild(suggestionItem);
+          suggestionItem.addEventListener('click', () => {
+            document.querySelector('.js-search-input').value = suggestionItem.textContent;
+            searchSuggestion.style.display = 'none';
+          });
+        }
+      }).catch(error => {
+        console.log('Uncaught error. Pleaase check your internet.', error)
+      })
+    
+  }
+
+    
+})
