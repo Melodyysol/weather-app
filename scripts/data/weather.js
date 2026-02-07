@@ -83,7 +83,7 @@ function dailyForecastFun(response) {
     const minTemp = dailyForecast.temperature_2m_min[i].toFixed(0);
     const weatherCode = dailyForecast.weathercode[i];
     const weatherDescription = getWeatherDescription(weatherCode);
-    console.log(day, maxTemp, minTemp, weatherCode, weatherDescription);
+    // console.log(day, maxTemp, minTemp, weatherCode, weatherDescription);
     dailyForecastHTML += `
       <div class="bg-[#3d3b5e] flex flex-col gap-y-2 rounded-xl py-4 text-center border border-gray-600">
         <p class="text-[0.84rem] font-extralight">${day}</p>
@@ -109,7 +109,7 @@ function hourlyForecastFun(response) {
     const temperature = hourlyForecast.temperature_2m[i].toFixed(0);
     const weatherCode = hourlyForecast.weathercode[i];
     const weatherDescription = getWeatherDescription(weatherCode);
-    console.log(hour, temperature, weatherCode, weatherDescription);
+    // console.log(hour, temperature, weatherCode, weatherDescription);
     hourlyForecastHTML += `
       <div class="bg-[#3d3b5e] flex justify-between content-center px-2 rounded-md border border-gray-600">
         <div class="flex items-center py-2 content-center gap-x-2">

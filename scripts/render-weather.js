@@ -1,12 +1,15 @@
 import { pageHead } from "./shared/weatherHeader.js";
-import { response, city, country, getWeatherByCityName } from "./data/weather-api.js";
 import { getWeatherDescription, extralInfomation, dailyForecastFun, hourlyForecastFun } from "./data/weather.js";
 import { errorState } from "./error-state.js";
+import { getWeatherByCityName, city, state, country } from "./data/weather-api.js";
 
 document.querySelector('header').innerHTML = pageHead()
-
-export function renderWeatherPage() {
-  console.log("Rendering weather page with data:", response);
+let name2 = `${city} ${state}, ${country}`;
+export function renderWeatherPage(response) {
+  let name = `${city} ${state}, ${country}`;
+  if (name2.trim() !== ',') {
+    name = name2;
+  }
   let temperature = (response.current_weather.temperature).toFixed(0);
   let date = response.current_weather.time;
   let dateObj = new Date(date);
@@ -22,7 +25,7 @@ export function renderWeatherPage() {
       <div class="relative md:hidden">
         <div class="absolute flex flex-col content-center top-0 left-0 right-0 bottom-0">
           <div class="m-auto flex flex-col text-center mt-10">
-            <h3 class="text-2xl">${city}, ${country}</h3>
+            <h3 class="text-2xl">${name}</h3>
             <span class="text-[#aeaeb7]">${formattedDate}</span>
           </div>
           <div class="m-auto -mt-5 flex content-center gap-x-8">
@@ -35,7 +38,7 @@ export function renderWeatherPage() {
       <div class="relative hidden md:block">
         <div class="absolute flex justify-between content-center md:px-5 md:pt-10 lg:pt-20 lg:px-10 right-0 left-0 z-10">
           <div class="flex flex-col content-center text-center md:mt-6 lg:mt-10">
-            <h3 class="md:text-[1.125rem] lg:text-2xl">${city}, ${country}</h3>
+            <h3 class="md:text-[1.125rem] lg:text-2xl">${name}</h3>
             <span class="text-[#aeaeb7] md:text-[0.85rem]">${formattedDate}</span>
           </div>
           <div class="flex content-center gap-x-8">
@@ -67,14 +70,16 @@ document.querySelector('.js-search-input').addEventListener('input', async (even
   }
 
   let cityName = event.target.value;
+  cityName = cityName.trim().replace(/\s+/g, ' ').toLowerCase();
+  let finalQuery = encodeURIComponent(cityName);
   if (cityName.length > 1) {
-    const geocodingUrl = `https://geocoding-api.open-meteo.com/v1/search?name=${cityName}&count=15`;
+    const geocodingUrl = `https://geocoding-api.open-meteo.com/v1/search?name=${finalQuery}&count=15`;
     fetch(geocodingUrl).then(response => response.json())
       .then(async geocoding => {
         if (!geocoding.results || geocoding.results.length === 0) {
           throw new Error("City not found");
         }
-        geocoding.results = geocoding.results.filter(result => result.country !== undefined);
+        geocoding.results = geocoding.results.filter(result => result.country !== '');
         document.querySelector('.js-search-suggestion').innerHTML = '';
         for (let i = 0; i < geocoding.results.length; i++) {
           const suggestionItem = document.createElement('p');
@@ -82,16 +87,50 @@ document.querySelector('.js-search-input').addEventListener('input', async (even
           suggestionItem.classList.add('js-search-suggestion-item', 'text-[0.85rem]', 'py-2', 'px-3', 'cursor-pointer', 'hover:bg-[#2121309a]');
           // document.querySelector('.js-search-suggestion').innerHTML += suggestionItem.outerHTML;
           document.querySelector('.js-search-suggestion').appendChild(suggestionItem);
-          suggestionItem.addEventListener('click', () => {
+          suggestionItem.addEventListener('click', async () => {
             document.querySelector('.js-search-input').value = suggestionItem.textContent;
             searchSuggestion.style.display = 'none';
+            let {latitude, longitude} = geocoding.results[i];
+            name2 = `${geocoding.results[i].name} ${geocoding.results[i].admin1}, ${geocoding.results[i].country}`;
+            const weatehrUrl = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true&daily=weathercode,temperature_2m_max,temperature_2m_min&hourly=weathercode,temperature_2m,apparent_temperature,relative_humidity_2m,wind_speed_10m,precipitation&windspeed_unit=mph&precipitation_unit=inch&timezone=auto`;
+            const weatherResponse = await fetch(weatehrUrl).then(r => r.json())
+              .then(d => {
+                return d;
+              })
+            renderWeatherPage(weatherResponse);
           });
         }
       }).catch(error => {
-        console.log('Uncaught error. Pleaase check your internet.', error)
+        console.error('Uncaught error. Please check your internet connection.', error)
       })
     
-  }
-
-    
+  }   
 })
+
+document.querySelector('.js-search-button').addEventListener('click', async () => {
+  document.querySelector('.js-search-suggestion').style.display = 'none';
+  let cityName = document.querySelector('.js-search-input').value;
+  cityName = cityName.trim().replace(/\s+/g, ' ').toLowerCase();
+  let finalQuery = encodeURIComponent(cityName);
+  getWeatherByCityName(finalQuery)
+});
+
+window.addEventListener('load', async () => {
+  try {
+    const weatherResponse = await getWeatherByCityName('Ilorin');
+    return weatherResponse;
+  } catch (error) {
+    console.error("Error fetching weather data on page load:", error);
+    document.querySelector('.js-section-1').innerHTML = errorState();
+  }
+});
+
+window.addEventListener('offline', () => {
+  document.querySelector('.js-section-1').innerHTML = errorState();
+});
+
+document.body.addEventListener('click', (event) => {
+  if (!event.target.classList.contains('js-search-suggestion-item')) {
+    document.querySelector('.js-search-suggestion').style.display = 'none';
+  }
+});
