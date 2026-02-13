@@ -20,9 +20,9 @@ async function getWeatherByCityName(cityName) {
     return;
   }
   geocoding.results = geocoding.results.filter(result => result.country !== undefined);
-  city = geocoding.results[0].name;
-  state = geocoding.results[0].admin1;
-  country = geocoding.results[0].country;
+  city = geocoding.results[0].name === undefined ? '' : geocoding.results[0].name;
+  state = geocoding.results[0].admin1 === undefined ? '' : geocoding.results[0].admin1;
+  country = geocoding.results[0].country === undefined ? '' : geocoding.results[0].country;
   let {latitude, longitude} = geocoding.results[0];
   const weatehrUrl = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true&daily=weathercode,temperature_2m_max,temperature_2m_min&hourly=weathercode,temperature_2m,apparent_temperature,relative_humidity_2m,wind_speed_10m,precipitation&windspeed_unit=mph&precipitation_unit=inch&timezone=auto`;
   const weatherResponse = await fetch(weatehrUrl).then(r => r.json())

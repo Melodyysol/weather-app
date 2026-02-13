@@ -1,11 +1,17 @@
+import { unitsScale } from "../data/units-scale.js";
+
 export function pageHead() { 
   const pageHeadHTML = `
     <div class="flex flex-wrap justify-between content-center">
       <img class="w-31" src="weather-app-main/assets/images/logo.svg" alt="Weather Logo">
-      <div class="cursor-pointer bg-[#3d3b5e] flex justify-center gap-x-2 w-25 content-center py-2 rounded-md">
+      <div class="js-units-display relative cursor-pointer bg-[#3d3b5e] flex justify-center gap-x-2 w-25 content-center py-2 rounded-md">
         <img src="weather-app-main/assets/images/icon-units.svg" alt="Setting Icon">
         <span class="text-[0.75rem]">Units</span>
         <img  src="weather-app-main/assets/images/icon-dropdown.svg" alt="Dropdown Icon">
+        <div class="js-units-conversion absolute flex-col gap-y-5 bg-[#3d3b5e] w-60 mt-2 rounded-xl px-2 pt-4 pb-10 z-10 right-0 top-full overflow-auto border border-gray-600 hidden">
+          <h1 class="text-[1.2rem] pl-2">Switch to Imperial</h1>
+          ${unitsScale()}
+        </div>
       </div>
     </div>
     <h1 class="js-heading heading font-['Bricolage_Grotesque'] font-bold text-[2.8rem] text-center mt-15"><span>How's the </span><span class="block md:inline">sky looking</span> today?</h1>

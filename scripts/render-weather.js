@@ -4,6 +4,16 @@ import { errorState } from "./error-state.js";
 import { getWeatherByCityName, city, state, country } from "./data/weather-api.js";
 
 document.querySelector('header').innerHTML = pageHead()
+let listUnits = false
+document.querySelector('.js-units-display').addEventListener('click', () => {
+  if (listUnits === false) {
+    document.querySelector('.js-units-conversion').style.display = 'flex'
+    listUnits = true
+  }else if(listUnits === true) {
+    document.querySelector('.js-units-conversion').style.display = 'none'
+    listUnits = false;
+  }
+})
 let name2 = `${city} ${state}, ${country}`;
 export function renderWeatherPage(response) {
   let name = `${city} ${state}, ${country}`;
@@ -83,7 +93,7 @@ document.querySelector('.js-search-input').addEventListener('input', async (even
         document.querySelector('.js-search-suggestion').innerHTML = '';
         for (let i = 0; i < geocoding.results.length; i++) {
           const suggestionItem = document.createElement('p');
-          suggestionItem.textContent = `${geocoding.results[i].name}, ${geocoding.results[i].admin1}, ${geocoding.results[i].country}`;
+          suggestionItem.textContent = `${geocoding.results[i].name === undefined ? '' : geocoding.results[i].name}, ${geocoding.results[i].admin1 === undefined ? '' : geocoding.results[i].admin1}, ${geocoding.results[i].country === undefined ? '' : geocoding.results[i].country}`;
           suggestionItem.classList.add('js-search-suggestion-item', 'text-[0.85rem]', 'py-2', 'px-3', 'cursor-pointer', 'hover:bg-[#2121309a]');
           // document.querySelector('.js-search-suggestion').innerHTML += suggestionItem.outerHTML;
           document.querySelector('.js-search-suggestion').appendChild(suggestionItem);
@@ -91,7 +101,8 @@ document.querySelector('.js-search-input').addEventListener('input', async (even
             document.querySelector('.js-search-input').value = suggestionItem.textContent;
             searchSuggestion.style.display = 'none';
             let {latitude, longitude} = geocoding.results[i];
-            name2 = `${geocoding.results[i].name} ${geocoding.results[i].admin1}, ${geocoding.results[i].country}`;
+            console.log(geocoding)
+            name2 = `${geocoding.results[i].name} ${geocoding.results[i].admin1}, ${geocoding.results[i].country.length <= 7 ? geocoding.results[i].country : geocoding.results[i].country_code}`;
             const weatehrUrl = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true&daily=weathercode,temperature_2m_max,temperature_2m_min&hourly=weathercode,temperature_2m,apparent_temperature,relative_humidity_2m,wind_speed_10m,precipitation&windspeed_unit=mph&precipitation_unit=inch&timezone=auto`;
             const weatherResponse = await fetch(weatehrUrl).then(r => r.json())
               .then(d => {
