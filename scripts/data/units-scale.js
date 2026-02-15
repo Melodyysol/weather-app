@@ -19,7 +19,7 @@ function unitsScale() {
   let html = '';
   units.forEach(unit => {
     html += `
-      <div class="border-b border-b-gray-600">
+      <div class="border-b border-b-gray-600 z-20">
         <p class="text-sm text-[#aeaeb7] pl-2">${unit.scale}</p>
         <label class="flex justify-between content-center cursor-pointer p-2 rounded-xl hover:bg-[#33314d96]">
           <span class="text-[1.2rem]">${unit.unit1}</span>

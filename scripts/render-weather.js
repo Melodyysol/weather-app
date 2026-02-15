@@ -166,11 +166,34 @@ document.querySelector('.js-search-button').addEventListener('click', async () =
 
 window.addEventListener('load', async () => {
   try {
-    const weatherResponse = await getWeatherByCityName('Ilorin', selectedUnits);
+    // get user location and fetch weather data for that location
+    const userLocation = await new Promise((resolve, reject) => {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(position => {
+          resolve({
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude
+          });
+        }, error => {
+          reject(error);
+        });
+      } else {
+        reject(new Error("Geolocation is not supported by this browser."));
+      }
+    });
+
+    const { latitude, longitude } = userLocation;
+    console.log('User location:', latitude, longitude);
+    const weatherAPIUrl = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true&daily=weathercode,temperature_2m_max,temperature_2m_min&hourly=weathercode,temperature_2m,apparent_temperature,relative_humidity_2m,wind_speed_10m,precipitation&windspeed_unit=${selectedUnits.windSpeed}&precipitation_unit=${selectedUnits.precipitation}&temperature_unit=${selectedUnits.temperature}&timezone=auto`; 
+    const weatherResponse = await fetch(weatherAPIUrl).then(r => r.json())
+      .then(d => {
+        return d;
+      });
+    renderWeatherPage(weatherResponse);
     return weatherResponse;
   } catch (error) {
     console.error("Error fetching weather data on page load:", error);
-    document.querySelector('.js-section-1').innerHTML = errorState();
+    // document.querySelector('.js-section-1').innerHTML = errorState();
   }
 });
 
