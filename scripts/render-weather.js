@@ -14,6 +14,36 @@ document.querySelector('.js-units-display').addEventListener('click', () => {
     listUnits = false;
   }
 })
+document.body.addEventListener('click', (event) => {
+  if (!event.target.closest('.js-units-display')) {
+    document.querySelector('.js-units-conversion').style.display = 'none';
+    listUnits = false;
+  }
+});
+
+let selectedUnits = {
+  temperature: 'celsius',
+  windSpeed: 'kmh',
+  precipitation: 'mm'
+};
+document.querySelector('.js-units-conversion').addEventListener('click', (event) => {
+  if (event.target.tagName === 'INPUT') {
+    const selectedUnit = event.target.name;
+    const selectedValue = event.target.checked ? event.target.previousElementSibling.textContent : null;
+    if (selectedUnit === 'temp-scale') {
+      selectedUnits.temperature = selectedValue.includes('Celcius') ? 'celsius' : 'fahrenheit';
+    } else if (selectedUnit === 'wind-scale') {
+      selectedUnits.windSpeed = selectedValue.includes('Km/h') ? 'kmh' : 'mph';
+    } else if (selectedUnit === 'prec-scale') {
+      selectedUnits.precipitation = selectedValue.includes('Millimeters') ? 'mm' : 'inch';
+    }
+  }
+  let cityName = document.querySelector('.js-search-input').value;
+  cityName = cityName.trim().replace(/\s+/g, ' ').toLowerCase();
+  let finalQuery = encodeURIComponent(cityName);
+  getWeatherByCityName(finalQuery, selectedUnits)
+});
+
 let name2 = `${city} ${state}, ${country}`;
 export function renderWeatherPage(response) {
   let name = `${city} ${state}, ${country}`;
@@ -103,8 +133,8 @@ document.querySelector('.js-search-input').addEventListener('input', async (even
             let {latitude, longitude} = geocoding.results[i];
             console.log(geocoding)
             name2 = `${geocoding.results[i].name} ${geocoding.results[i].admin1}, ${geocoding.results[i].country.length <= 7 ? geocoding.results[i].country : geocoding.results[i].country_code}`;
-            const weatehrUrl = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true&daily=weathercode,temperature_2m_max,temperature_2m_min&hourly=weathercode,temperature_2m,apparent_temperature,relative_humidity_2m,wind_speed_10m,precipitation&windspeed_unit=mph&precipitation_unit=inch&timezone=auto`;
-            const weatherResponse = await fetch(weatehrUrl).then(r => r.json())
+            const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true&daily=weathercode,temperature_2m_max,temperature_2m_min&hourly=weathercode,temperature_2m,apparent_temperature,relative_humidity_2m,wind_speed_10m,precipitation&windspeed_unit=${selectedUnits.windSpeed}&precipitation_unit=${selectedUnits.precipitation}&temperature_unit=${selectedUnits.temperature}&timezone=auto`;
+            const weatherResponse = await fetch(weatherUrl).then(r => r.json())
               .then(d => {
                 return d;
               })
@@ -123,12 +153,20 @@ document.querySelector('.js-search-button').addEventListener('click', async () =
   let cityName = document.querySelector('.js-search-input').value;
   cityName = cityName.trim().replace(/\s+/g, ' ').toLowerCase();
   let finalQuery = encodeURIComponent(cityName);
-  getWeatherByCityName(finalQuery)
+  getWeatherByCityName(finalQuery, selectedUnits)
+  /*
+  .then(weatherResponse => {
+    renderWeatherPage(weatherResponse);
+  }).catch(error => {
+    console.error('Error fetching weather data:', error);
+    alert(`Failed to fetch weather data. Please check your internet connection and try again. You entered: "${cityName}"`);
+  });
+  */
 });
 
 window.addEventListener('load', async () => {
   try {
-    const weatherResponse = await getWeatherByCityName('Ilorin');
+    const weatherResponse = await getWeatherByCityName('Ilorin', selectedUnits);
     return weatherResponse;
   } catch (error) {
     console.error("Error fetching weather data on page load:", error);
