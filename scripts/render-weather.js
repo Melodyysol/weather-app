@@ -184,7 +184,20 @@ window.addEventListener('load', async () => {
 
     const { latitude, longitude } = userLocation;
     console.log('User location:', latitude, longitude);
-    const weatherAPIUrl = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true&daily=weathercode,temperature_2m_max,temperature_2m_min&hourly=weathercode,temperature_2m,apparent_temperature,relative_humidity_2m,wind_speed_10m,precipitation&windspeed_unit=${selectedUnits.windSpeed}&precipitation_unit=${selectedUnits.precipitation}&temperature_unit=${selectedUnits.temperature}&timezone=auto`; 
+    geocodingUrl = `https://geocoding-api.open-meteo.com/v1/reverse?latitude=${latitude}&longitude=${longitude}&count=1`;
+    fetch(geocodingUrl).then(r => r.json())
+      .then(geocoding => {
+        if (!geocoding.results || geocoding.results.length === 0) {
+          throw new Error("City not found");
+        }
+        city = geocoding.results[0].name === undefined ? '' : geocoding.results[0].name;
+        state = geocoding.results[0].admin1 === undefined ? '' : geocoding.results[0].admin1;
+        country = geocoding.results[0].country === undefined ? '' : geocoding.results[0].country;
+        name2 = `${geocoding.results[0].name} ${geocoding.results[0].admin1}, ${geocoding.results[0].country.length <= 7 ? geocoding.results[0].country : geocoding.results[0].country_code}`;
+      }).catch(error => {
+        console.error('Error fetching geocoding data:', error);
+      });
+    const weatherAPIUrl = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true&daily=weathercode,temperature_2m_max,temperature_2m_min&hourly=weathercode,temperature_2m,apparent_temperature,relative_humidity_2m,wind_speed_10m,precipitation&windspeed_unit=${selectedUnits.windSpeed}&precipitation_unit=${selectedUnits.precipitation}&temperature_unit=${selectedUnits.temperature}&timezone=auto`;
     const weatherResponse = await fetch(weatherAPIUrl).then(r => r.json())
       .then(d => {
         return d;
