@@ -2,6 +2,12 @@ import { renderWeatherPage } from "../render-weather.js";
 
 let name2 = '';
 let isRefresh = true;
+let originalSection1Content = ''; // Store original content
+
+// Save original content when page loads
+document.addEventListener('DOMContentLoaded', () => {
+  originalSection1Content = document.querySelector('.js-section-1').innerHTML;
+});
 
 // US state abbreviation to full name mapping
 const stateAbbrevMap = {
@@ -19,6 +25,9 @@ const stateAbbrevMap = {
 
 function getWeatherSugestionData(event) {
   const searchSuggestion = document.querySelector('.js-search-suggestion');
+  // Restore original content when user starts new search
+  document.querySelector('.js-section-1').innerHTML = originalSection1Content;
+  
   if (event.target.value.length > 1) {
     searchSuggestion.classList.remove('suggestion-hidden');
     searchSuggestion.classList.add('suggestion-visible');
@@ -81,7 +90,14 @@ function getWeatherByCityName(cityName) {
     fetch(geocodingUrl).then(response => response.json())
       .then(async geocoding => {
         if (!geocoding.results || geocoding.results.length === 0) {
-          throw new Error("City not found");
+          const searchSuggestion = document.querySelector('.js-search-suggestion');
+          searchSuggestion.classList.remove('suggestion-visible');
+          searchSuggestion.classList.add('suggestion-hidden');
+          document.querySelector('.js-section-1').innerHTML = `
+           <div style="display: flex; justify-content: center; width: 100%; height: 16rem;">
+             <div style="font-weight: 800; font-size: 1.125rem;">No search result found!</div>
+           </div>
+         `
         }
         geocoding.results = geocoding.results.filter(result => result.country !== '');
         let matchedResult;
@@ -135,15 +151,6 @@ function getWeatherByCityName(cityName) {
         renderWeatherPage(weatherResponse);
         // Dispatch event to notify render-weather.js that loading is complete
         document.dispatchEvent(new CustomEvent('weather:loaded', { detail: { weatherResponse } }));
-      }).catch(error => {
-        if(error){
-         document.querySelector('.js-search-suggestion').style.display = 'none'
-         document.querySelector('.js-section-1').innerHTML = `
-           <div class="flex justify-center content-center w-full h-64">
-             <div class="font-extrabold">No search result found!</div>
-           </div>
-         `
-        }
       })
     
   }
