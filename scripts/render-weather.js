@@ -14,6 +14,39 @@ style.textContent = `
       transform: rotate(360deg);
     }
   }
+  @keyframes load {
+    from {
+      color: gray;
+    }
+    to {
+      color: white;
+    }
+  }
+  @keyframes dot {
+    0%, 100% {
+      background-color: gray;
+      transform: translateX(0);
+    }
+    50% {
+      background-color: white;
+      transform: translateX(-8px);
+    }
+  }
+  .load {
+    animation: load 2s linear infinite alternate;
+  }
+  .dot1, .dot2, .dot3 {
+    animation: dot 2s linear infinite alternate;
+  }
+  .dot1 {
+    animation-delay: 0s;
+  }
+  .dot2 {
+    animation-delay: 0.2s;
+  }
+  .dot3 {
+    animation-delay: 0.4s;
+  }
   .loading-icon {
     animation: rotate 1s linear infinite;
     display: inline-block;
@@ -84,62 +117,91 @@ document.querySelector('.js-units-conversion').addEventListener('click', (event)
 });
 
 export function renderWeatherPage(response) {
-  let temperature = (response.current_weather.temperature).toFixed(0);
-  let date = response.current_weather.time;
-  let dateObj = new Date(date);
-  let options = { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' };
-  let formattedDate = dateObj.toLocaleDateString('en-US', options);
+  let weatherHTML = ''
+  if (response) {
+    let temperature = (response.current_weather.temperature).toFixed(0);
+    let date = response.current_weather.time;
+    let dateObj = new Date(date);
+    let options = { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' };
+    let formattedDate = dateObj.toLocaleDateString('en-US', options);
 
-  // Usage in your fetch
-  const weatherCode = response.current_weather.weathercode;
-  const weatherDescription = getWeatherDescription(weatherCode);
+    // Usage in your fetch
+    const weatherCode = response.current_weather.weathercode;
+    const weatherDescription = getWeatherDescription(weatherCode);
 
-  if (selectedUnits.temperature === 'fahrenheit') {
-    temperature = (temperature * 9/5) + 32;
-    temperature = temperature.toFixed(0);
-  }
-  if (selectedUnits.windSpeed === 'mph') {
-    response.hourly.wind_speed_10m = response.hourly.wind_speed_10m.map(speed => (speed * 0.621371).toFixed(2));
-  }
-  if (selectedUnits.precipitation === 'inch') {
-    response.hourly.precipitation = response.hourly.precipitation.map(prec => (prec * 0.0393701).toFixed(2));
-  }
+    if (selectedUnits.temperature === 'fahrenheit') {
+      temperature = (temperature * 9/5) + 32;
+      temperature = temperature.toFixed(0);
+    }
+    if (selectedUnits.windSpeed === 'mph') {
+      response.hourly.wind_speed_10m = response.hourly.wind_speed_10m.map(speed => (speed * 0.621371).toFixed(2));
+    }
+    if (selectedUnits.precipitation === 'inch') {
+      response.hourly.precipitation = response.hourly.precipitation.map(prec => (prec * 0.0393701).toFixed(2));
+    }
 
-  const weatherHTML = `
-      <div class="relative md:hidden">
-        <div class="absolute flex flex-col content-center top-0 left-0 right-0 bottom-0">
-          <div class="m-auto flex flex-col text-center mt-10">
-            <h3 class="text-2xl">${name2}</h3>
-            <span class="text-[#aeaeb7]">${formattedDate}</span>
+    weatherHTML = `
+        <div class="relative md:hidden">
+          <div class="absolute flex flex-col content-center top-0 left-0 right-0 bottom-0">
+            <div class="m-auto flex flex-col text-center mt-10">
+              <h3 class="text-2xl">${name2}</h3>
+              <span class="text-[#aeaeb7]">${formattedDate}</span>
+            </div>
+            <div class="m-auto -mt-5 flex content-center gap-x-8">
+              <img src="weather-app-main/assets/images/icon-${weatherDescription}.webp" alt="${weatherDescription} icon" class="w-30">
+              <h1 class="js-temperature text-[4.5rem] pt-2 italic">${temperature}&deg;</h1>
+            </div>
           </div>
-          <div class="m-auto -mt-5 flex content-center gap-x-8">
-            <img src="weather-app-main/assets/images/icon-${weatherDescription}.webp" alt="${weatherDescription} icon" class="w-30">
-            <h1 class="js-temperature text-[4.5rem] pt-2 italic">${temperature}&deg;</h1>
+          <img class="m-auto" src="weather-app-main/assets/images/bg-today-small.svg" alt="Small Background">
+        </div>
+        <div class="relative hidden md:block">
+          <div class="absolute flex justify-between content-center md:px-5 md:pt-10 lg:pt-20 lg:px-10 right-0 left-0 z-10">
+            <div class="flex flex-col content-center text-center md:mt-6 lg:mt-10">
+              <h3 class="md:text-[1.125rem] lg:text-2xl">${name2}</h3>
+              <span class="text-[#aeaeb7] md:text-[0.85rem]">${formattedDate}</span>
+            </div>
+            <div class="flex content-center gap-x-8">
+              <img src="weather-app-main/assets/images/icon-${weatherDescription}.webp" alt="${weatherDescription} icon" class="w-40 h-40 md:-mt-5 lg:mt-0">
+              <h1 class="js-temperature text-[4.5rem] italic mt-4 lg:mt-7">${temperature}&deg;</h1>
+            </div>
+          </div>
+          <img src="weather-app-main/assets/images/bg-today-large.svg" alt="Large Background" class="relative">
+        </div>
+        <div class="content-center justify-center grid grid-cols-2 gap-4 mt-6 md:grid-cols-4">${extralInfomation(response)}</div>
+        <div class="mt-5">
+          <h1>Daily forecast</h1>
+          <div class="content-center justify-center grid grid-cols-3 gap-4 mt-6 md:grid-cols-4 lg:grid-cols-8">
+            ${dailyForecastFun(response)}
           </div>
         </div>
-        <img class="m-auto" src="weather-app-main/assets/images/bg-today-small.svg" alt="Small Background">
-      </div>
-      <div class="relative hidden md:block">
-        <div class="absolute flex justify-between content-center md:px-5 md:pt-10 lg:pt-20 lg:px-10 right-0 left-0 z-10">
-          <div class="flex flex-col content-center text-center md:mt-6 lg:mt-10">
-            <h3 class="md:text-[1.125rem] lg:text-2xl">${name2}</h3>
-            <span class="text-[#aeaeb7] md:text-[0.85rem]">${formattedDate}</span>
+    `
+  }else {
+    weatherHTML =  `
+        <div class="relative w-full h-40 rounded-xl bg-[#3d3b5e] flex flex-col md:hidden">
+          <div class="m-auto mb-0 flex gap-x-2">
+            <div class="dot1 bg-white h-2 w-2 rounded-full"></div>
+            <div class="dot2 bg-white h-2 w-2 rounded-full -mt-1"></div>
+            <div class="dot3 bg-white h-2 w-2 rounded-full"></div>
           </div>
-          <div class="flex content-center gap-x-8">
-            <img src="weather-app-main/assets/images/icon-${weatherDescription}.webp" alt="${weatherDescription} icon" class="w-40 h-40 md:-mt-5 lg:mt-0">
-            <h1 class="js-temperature text-[4.5rem] italic mt-4 lg:mt-7">${temperature}&deg;</h1>
+          <div class="load m-auto mt-0">Loading...</div>
+        </div>
+        <div class="relative hidden md:flex md:flex-col w-190 gap-y-2 rounded-xl h-72 bg-[#3d3b5e]">
+          <div class="m-auto mb-0 flex gap-x-2">
+            <div class="dot1 bg-white h-2 w-2 rounded-full"></div>
+            <div class="dot2 bg-white h-2 w-2 rounded-full -mt-1"></div>
+            <div class="dot3 bg-white h-2 w-2 rounded-full"></div>
+          </div>
+          <div class="load m-auto mt-0">Loading...</div>
+        </div>
+        <div class="content-center justify-center grid grid-cols-2 gap-4 mt-6 md:grid-cols-4">${extralInfomation()}</div>
+        <div class="mt-5">
+          <h1>Daily forecast</h1>
+          <div class="content-center justify-center grid grid-cols-3 gap-4 mt-6 md:grid-cols-4 lg:grid-cols-8">
+            ${dailyForecastFun()}
           </div>
         </div>
-        <img src="weather-app-main/assets/images/bg-today-large.svg" alt="Large Background" class="relative">
-      </div>
-      <div class="content-center justify-center grid grid-cols-2 gap-4 mt-6 md:grid-cols-4">${extralInfomation(response)}</div>
-      <div class="mt-5">
-        <h1>Daily forecast</h1>
-        <div class="content-center justify-center grid grid-cols-3 gap-4 mt-6 md:grid-cols-4 lg:grid-cols-8">
-          ${dailyForecastFun(response)}
-        </div>
-      </div>
-  `
+    `
+  }
 
   document.querySelector('.js-weather-cont').innerHTML = weatherHTML;
   document.querySelector('.js-hourly-cont').innerHTML = hourlyForecastFun(response);
