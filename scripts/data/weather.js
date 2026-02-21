@@ -32,17 +32,30 @@ function getWeatherDescription(code) {
   return descriptions[code] || "sunny"; // Default fallback
 }
 
-function extralInfomation(response) {
+// Import selectedUnits from render-weather
+let selectedUnits = { temperature: 'celsius', windSpeed: 'kmh', precipitation: 'mm' };
+
+// Update selectedUnits when it changes from render-weather
+export function updateUnits(units) {
+  selectedUnits = units;
+}
+
+function extralInfomation(response, units = selectedUnits) {
   let extralInfo;
   if (response) {
     let wind = response.current_weather.windspeed;
     let humidity = response.hourly.relative_humidity_2m[0];
     let precipitation = response.hourly.precipitation[0];
     let feelsLike = (response.hourly.apparent_temperature[0]).toFixed(0);
+    
+    const windUnit = units.windSpeed === 'kmh' ? 'km/h' : 'mph';
+    const precipUnit = units.precipitation === 'mm' ? 'mm' : 'in';
+    const tempUnit = units.temperature === 'celsius' ? '&degC' : '&degF';
+    
     const extral = [{
       id: '1001-1000',
       type: 'Feel like',
-      value: `${feelsLike}&deg;`
+      value: `${feelsLike}${tempUnit}`
       },{
         id: '1001-1001',
         type: 'Humidity',
@@ -50,11 +63,11 @@ function extralInfomation(response) {
       },{
         id: '1001-1002',
         type: 'Wind',
-        value: `${wind.toFixed(0)}mph`
+        value: `${wind.toFixed(0)}${windUnit}`
       },{
         id: '1001-1003',
         type: 'Precipitate',
-        value: `${precipitation.toFixed(0)} in`
+        value: `${precipitation.toFixed(0)} ${precipUnit}`
     }];
 
     extralInfo = function () {
@@ -87,10 +100,11 @@ function extralInfomation(response) {
   return extralInfo();
 }
 
-function dailyForecastFun(response) {
+function dailyForecastFun(response, units = selectedUnits) {
   let dailyForecastHTML = '';
   if (response) {
     let dailyForecast = response.daily;
+    const tempUnit = units.temperature === 'celsius' ? '&degC' : '&degF';
     for (let i = 0; i < dailyForecast.time.length; i++) {
       const time = dailyForecast.time[i];
       const date = new Date(time);
@@ -106,7 +120,7 @@ function dailyForecastFun(response) {
           <p class="text-[0.84rem] font-extralight">${day}</p>
           <img src="weather-app-main/assets/images/icon-${weatherDescription}.webp" alt="${weatherDescription} icon" class="w-15 m-auto">
           <div class="flex justify-around text-[0.84rem] font-extralight">
-            <span class="js-daily-max-temp">${maxTemp}&deg;</span><span class="js-daily-min-temp">${minTemp}&deg;</span>
+            <span class="js-daily-max-temp">${maxTemp}${tempUnit}</span><span class="js-daily-min-temp">${minTemp}${tempUnit}</span>
           </div>
         </div>
       `;
@@ -124,10 +138,11 @@ function dailyForecastFun(response) {
   return dailyForecastHTML;
 }
 
-function hourlyForecastFun(response) {
+function hourlyForecastFun(response, units = selectedUnits) {
   let hourlyForecastHTML = '';
   if (response) {
     let hourlyForecast = response.hourly;
+    const tempUnit = units.temperature === 'celsius' ? '&degC' : '&degF';
     for (let i = 0; i < 8; i++) {
       const time = hourlyForecast.time[i];
       const date = new Date(time);
@@ -143,7 +158,7 @@ function hourlyForecastFun(response) {
             <img src="weather-app-main/assets/images/icon-${weatherDescription}.webp" alt="${weatherDescription} icon" class="w-10">
             <span class="text-[0.85rem]">${hour}</span>
           </div>
-          <span class="text-[0.85rem] pt-5">${temperature}&deg;</span>
+          <span class="text-[0.85rem] pt-5">${temperature}${tempUnit}</span>
         </div>
       `;
     }

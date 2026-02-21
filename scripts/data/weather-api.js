@@ -1,4 +1,4 @@
-import { renderWeatherPage } from "../render-weather.js";
+import { renderWeatherPage, selectedUnits } from "../render-weather.js";
 
 let name2 = '';
 let isRefresh = true;
@@ -143,7 +143,7 @@ function getWeatherByCityName(cityName) {
         }
 
         name2 = `${matchedResult.name} ${matchedResult.admin1}, ${matchedResult.country.length <= 7 ? matchedResult.country : matchedResult.country_code}`;
-        const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${matchedResult.latitude}&longitude=${matchedResult.longitude}&current_weather=true&daily=weathercode,temperature_2m_max,temperature_2m_min&hourly=weathercode,temperature_2m,apparent_temperature,relative_humidity_2m,wind_speed_10m,precipitation&timezone=auto`;
+        const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${matchedResult.latitude}&longitude=${matchedResult.longitude}&temperature_unit=${selectedUnits.temperature}&wind_speed_unit=${selectedUnits.windSpeed}&precipitation_unit=${selectedUnits.precipitation}&current_weather=true&daily=weathercode,temperature_2m_max,temperature_2m_min&hourly=weathercode,temperature_2m,apparent_temperature,relative_humidity_2m,wind_speed_10m,precipitation&timezone=auto`;
         const weatherResponse = await fetch(weatherUrl).then(r => r.json())
           .then(d => {
             return d;

@@ -90,22 +90,23 @@ document.body.addEventListener('click', (event) => {
 let selectedUnits = {
   temperature: 'celsius',
   windSpeed: 'kmh',
-  precipitation: 'mm'
+  precipitation: 'mm',
+  isImperial: false
 };
-document.querySelector('.js-units-conversion').addEventListener('click', (event) => {
-  if (event.target.tagName === 'INPUT') {
-    // checkbox behaviour: make the clicked box exclusive within its group
-    if (event.target.type === 'checkbox') {
-      const group = document.getElementsByName(event.target.name);
-      group.forEach(el => {
-        if (el !== event.target) el.checked = false;
-      });
-      // ensure the clicked one remains checked (toggle off would uncheck everything)
-      if (!event.target.checked) event.target.checked = true;
-    }
 
+document.querySelector('.js-units-conversion').addEventListener('click', async (event) => {
+  if (event.target.tagName === 'INPUT' && event.target.type === 'checkbox') {
+    // Make checkboxes exclusive within their group
+    const group = document.getElementsByName(event.target.name);
+    group.forEach(el => {
+      if (el !== event.target) el.checked = false;
+    });
+    if (!event.target.checked) event.target.checked = true;
+
+    // Update selectedUnits based on which checkbox is checked
     const selectedUnit = event.target.name;
-    const selectedValue = event.target.checked ? event.target.previousElementSibling.textContent : null;
+    const selectedValue = event.target.previousElementSibling.textContent;
+    
     if (selectedUnit === 'temp-scale') {
       selectedUnits.temperature = selectedValue.includes('Celcius') ? 'celsius' : 'fahrenheit';
     } else if (selectedUnit === 'wind-scale') {
@@ -113,8 +114,66 @@ document.querySelector('.js-units-conversion').addEventListener('click', (event)
     } else if (selectedUnit === 'prec-scale') {
       selectedUnits.precipitation = selectedValue.includes('Millimeters') ? 'mm' : 'inch';
     }
+    
+    // Update isImperial flag
+    selectedUnits.isImperial = (selectedUnits.temperature === 'fahrenheit');
+    
+    // Refresh weather immediately
+    const searchInput = document.querySelector('.js-search-input');
+    if (searchInput && searchInput.value) {
+      const { getWeatherByCityName } = await import('./data/weather-api.js');
+      getWeatherByCityName(searchInput.value);
+    }
   }
 });
+
+// Handle "Switch to Imperial" button
+document.querySelector('.js-units-conversion').addEventListener('click', async (event) => {
+  if (event.target.id === 'switch-imperial') {
+    const isCurrentlyImperial = selectedUnits.isImperial;
+    
+    // Toggle all units
+    if (isCurrentlyImperial) {
+      // Switch to metric
+      selectedUnits.temperature = 'celsius';
+      selectedUnits.windSpeed = 'kmh';
+      selectedUnits.precipitation = 'mm';
+      selectedUnits.isImperial = false;
+      event.target.textContent = 'Switch to Imperial';
+    } else {
+      // Switch to imperial
+      selectedUnits.temperature = 'fahrenheit';
+      selectedUnits.windSpeed = 'mph';
+      selectedUnits.precipitation = 'inch';
+      selectedUnits.isImperial = true;
+      event.target.textContent = 'Switch to Metric';
+    }
+    
+    // Update checkboxes to reflect the change
+    document.querySelectorAll('input[name="temp-scale"]').forEach(el => el.checked = false);
+    document.querySelectorAll('input[name="wind-scale"]').forEach(el => el.checked = false);
+    document.querySelectorAll('input[name="prec-scale"]').forEach(el => el.checked = false);
+    
+    if (!selectedUnits.isImperial) {
+      document.querySelectorAll('input[name="temp-scale"]')[0].checked = true;
+      document.querySelectorAll('input[name="wind-scale"]')[0].checked = true;
+      document.querySelectorAll('input[name="prec-scale"]')[0].checked = true;
+    } else {
+      document.querySelectorAll('input[name="temp-scale"]')[1].checked = true;
+      document.querySelectorAll('input[name="wind-scale"]')[1].checked = true;
+      document.querySelectorAll('input[name="prec-scale"]')[1].checked = true;
+    }
+    
+    // Refresh weather immediately
+    const searchInput = document.querySelector('.js-search-input');
+    if (searchInput && searchInput.value) {
+      const { getWeatherByCityName } = await import('./data/weather-api.js');
+      getWeatherByCityName(searchInput.value);
+    }
+  }
+});
+
+export { selectedUnits };
 
 export function renderWeatherPage(response) {
   let weatherHTML = ''
@@ -129,17 +188,6 @@ export function renderWeatherPage(response) {
     const weatherCode = response.current_weather.weathercode;
     const weatherDescription = getWeatherDescription(weatherCode);
 
-    if (selectedUnits.temperature === 'fahrenheit') {
-      temperature = (temperature * 9/5) + 32;
-      temperature = temperature.toFixed(0);
-    }
-    if (selectedUnits.windSpeed === 'mph') {
-      response.hourly.wind_speed_10m = response.hourly.wind_speed_10m.map(speed => (speed * 0.621371).toFixed(2));
-    }
-    if (selectedUnits.precipitation === 'inch') {
-      response.hourly.precipitation = response.hourly.precipitation.map(prec => (prec * 0.0393701).toFixed(2));
-    }
-
     weatherHTML = `
         <div class="relative md:hidden">
           <div class="absolute flex flex-col content-center top-0 left-0 right-0 bottom-0">
@@ -149,7 +197,7 @@ export function renderWeatherPage(response) {
             </div>
             <div class="m-auto -mt-5 flex content-center gap-x-8">
               <img src="weather-app-main/assets/images/icon-${weatherDescription}.webp" alt="${weatherDescription} icon" class="w-30">
-              <h1 class="js-temperature text-[4.5rem] pt-2 italic">${temperature}&deg;</h1>
+              <h1 class="js-temperature text-[4.5rem] pt-2 italic">${temperature}${selectedUnits.temperature === 'celsius' ? '&degC' : '&degF'}</h1>
             </div>
           </div>
           <img class="m-auto" src="weather-app-main/assets/images/bg-today-small.svg" alt="Small Background">
@@ -162,16 +210,16 @@ export function renderWeatherPage(response) {
             </div>
             <div class="flex content-center gap-x-8">
               <img src="weather-app-main/assets/images/icon-${weatherDescription}.webp" alt="${weatherDescription} icon" class="w-40 h-40 md:-mt-5 lg:mt-0">
-              <h1 class="js-temperature text-[4.5rem] italic mt-4 lg:mt-7">${temperature}&deg;</h1>
+              <h1 class="js-temperature text-[4.5rem] italic mt-4 lg:mt-7">${temperature}${selectedUnits.temperature === 'celsius' ? '&degC' : '&degF'}</h1>
             </div>
           </div>
           <img src="weather-app-main/assets/images/bg-today-large.svg" alt="Large Background" class="relative">
         </div>
-        <div class="content-center justify-center grid grid-cols-2 gap-4 mt-6 md:grid-cols-4">${extralInfomation(response)}</div>
+        <div class="content-center justify-center grid grid-cols-2 gap-4 mt-6 md:grid-cols-4">${extralInfomation(response, selectedUnits)}</div>
         <div class="mt-5">
           <h1>Daily forecast</h1>
           <div class="content-center justify-center grid grid-cols-3 gap-4 mt-6 md:grid-cols-4 lg:grid-cols-8">
-            ${dailyForecastFun(response)}
+            ${dailyForecastFun(response, selectedUnits)}
           </div>
         </div>
     `
@@ -204,7 +252,7 @@ export function renderWeatherPage(response) {
   }
 
   document.querySelector('.js-weather-cont').innerHTML = weatherHTML;
-  document.querySelector('.js-hourly-cont').innerHTML = hourlyForecastFun(response);
+  document.querySelector('.js-hourly-cont').innerHTML = hourlyForecastFun(response, selectedUnits);
 }
 
 function showLoadingState(searchSuggestion) {
