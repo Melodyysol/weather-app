@@ -136,15 +136,14 @@ function getWeatherByCityName(cityName) {
         // Dispatch event to notify render-weather.js that loading is complete
         document.dispatchEvent(new CustomEvent('weather:loaded', { detail: { weatherResponse } }));
       }).catch(error => {
-       if (isRefresh) {
+        if(error){
          document.querySelector('.js-search-suggestion').style.display = 'none'
          document.querySelector('.js-section-1').innerHTML = `
            <div class="flex justify-center content-center w-full h-64">
              <div class="font-extrabold">No search result found!</div>
            </div>
          `
-         isRefresh = false
-       }
+        }
       })
     
   }
