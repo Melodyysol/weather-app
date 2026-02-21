@@ -1,7 +1,40 @@
 import { pageHead } from "./shared/weatherHeader.js";
 import { getWeatherDescription, extralInfomation, dailyForecastFun, hourlyForecastFun } from "./data/weather.js";
 import { errorState } from "./error-state.js";
-import { getWeatherByCityName, city, state, country } from "./data/weather-api.js";
+import { getWeatherByCityName, getWeatherSugestionData, name2 } from "./data/weather-api.js";
+
+// Add loading animation styles
+const style = document.createElement('style');
+style.textContent = `
+  @keyframes rotate {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
+  }
+  .loading-icon {
+    animation: rotate 1s linear infinite;
+    display: inline-block;
+  }
+  .js-search-suggestion {
+    display: block; /* control visibility via classes */
+  }
+  .suggestion-hidden {
+    opacity: 0;
+    transform: translateY(-6px);
+    pointer-events: none;
+    transition: opacity 220ms ease, transform 220ms ease;
+  }
+  .suggestion-visible {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+    transition: opacity 220ms ease, transform 220ms ease;
+  }
+`;
+document.head.appendChild(style);
 
 document.querySelector('header').innerHTML = pageHead()
 let listUnits = false
@@ -28,6 +61,16 @@ let selectedUnits = {
 };
 document.querySelector('.js-units-conversion').addEventListener('click', (event) => {
   if (event.target.tagName === 'INPUT') {
+    // checkbox behaviour: make the clicked box exclusive within its group
+    if (event.target.type === 'checkbox') {
+      const group = document.getElementsByName(event.target.name);
+      group.forEach(el => {
+        if (el !== event.target) el.checked = false;
+      });
+      // ensure the clicked one remains checked (toggle off would uncheck everything)
+      if (!event.target.checked) event.target.checked = true;
+    }
+
     const selectedUnit = event.target.name;
     const selectedValue = event.target.checked ? event.target.previousElementSibling.textContent : null;
     if (selectedUnit === 'temp-scale') {
@@ -38,18 +81,9 @@ document.querySelector('.js-units-conversion').addEventListener('click', (event)
       selectedUnits.precipitation = selectedValue.includes('Millimeters') ? 'mm' : 'inch';
     }
   }
-  let cityName = document.querySelector('.js-search-input').value;
-  cityName = cityName.trim().replace(/\s+/g, ' ').toLowerCase();
-  let finalQuery = encodeURIComponent(cityName);
-  getWeatherByCityName(finalQuery, selectedUnits)
 });
 
-let name2 = `${city} ${state}, ${country}`;
 export function renderWeatherPage(response) {
-  let name = `${city} ${state}, ${country}`;
-  if (name2.trim() !== ',') {
-    name = name2;
-  }
   let temperature = (response.current_weather.temperature).toFixed(0);
   let date = response.current_weather.time;
   let dateObj = new Date(date);
@@ -60,17 +94,27 @@ export function renderWeatherPage(response) {
   const weatherCode = response.current_weather.weathercode;
   const weatherDescription = getWeatherDescription(weatherCode);
 
+  if (selectedUnits.temperature === 'fahrenheit') {
+    temperature = (temperature * 9/5) + 32;
+    temperature = temperature.toFixed(0);
+  }
+  if (selectedUnits.windSpeed === 'mph') {
+    response.hourly.wind_speed_10m = response.hourly.wind_speed_10m.map(speed => (speed * 0.621371).toFixed(2));
+  }
+  if (selectedUnits.precipitation === 'inch') {
+    response.hourly.precipitation = response.hourly.precipitation.map(prec => (prec * 0.0393701).toFixed(2));
+  }
 
   const weatherHTML = `
       <div class="relative md:hidden">
         <div class="absolute flex flex-col content-center top-0 left-0 right-0 bottom-0">
           <div class="m-auto flex flex-col text-center mt-10">
-            <h3 class="text-2xl">${name}</h3>
+            <h3 class="text-2xl">${name2}</h3>
             <span class="text-[#aeaeb7]">${formattedDate}</span>
           </div>
           <div class="m-auto -mt-5 flex content-center gap-x-8">
             <img src="weather-app-main/assets/images/icon-${weatherDescription}.webp" alt="${weatherDescription} icon" class="w-30">
-            <h1 class="text-[4.5rem] pt-2 italic">${temperature}&deg;</h1>
+            <h1 class="js-temperature text-[4.5rem] pt-2 italic">${temperature}&deg;</h1>
           </div>
         </div>
         <img class="m-auto" src="weather-app-main/assets/images/bg-today-small.svg" alt="Small Background">
@@ -78,12 +122,12 @@ export function renderWeatherPage(response) {
       <div class="relative hidden md:block">
         <div class="absolute flex justify-between content-center md:px-5 md:pt-10 lg:pt-20 lg:px-10 right-0 left-0 z-10">
           <div class="flex flex-col content-center text-center md:mt-6 lg:mt-10">
-            <h3 class="md:text-[1.125rem] lg:text-2xl">${name}</h3>
+            <h3 class="md:text-[1.125rem] lg:text-2xl">${name2}</h3>
             <span class="text-[#aeaeb7] md:text-[0.85rem]">${formattedDate}</span>
           </div>
           <div class="flex content-center gap-x-8">
             <img src="weather-app-main/assets/images/icon-${weatherDescription}.webp" alt="${weatherDescription} icon" class="w-40 h-40 md:-mt-5 lg:mt-0">
-            <h1 class="text-[4.5rem] italic mt-4 lg:mt-7">${temperature}&deg;</h1>
+            <h1 class="js-temperature text-[4.5rem] italic mt-4 lg:mt-7">${temperature}&deg;</h1>
           </div>
         </div>
         <img src="weather-app-main/assets/images/bg-today-large.svg" alt="Large Background" class="relative">
@@ -101,69 +145,44 @@ export function renderWeatherPage(response) {
   document.querySelector('.js-hourly-cont').innerHTML = hourlyForecastFun(response);
 }
 
+function showLoadingState(searchSuggestion) {
+  const loadingSearch = document.createElement('div');
+  loadingSearch.innerHTML = `
+    <img class="loading-icon w-5" src="weather-app-main/assets/images/icon-loading.svg" alt="Loading Icon">
+    <span class="text-[0.85rem]">Search in progress...</span>
+    `;
+  loadingSearch.classList.add('text-[0.85rem]', 'py-2', 'px-3', 'flex', 'gap-x-2', 'content-center');
+  searchSuggestion.innerHTML = '';
+  searchSuggestion.appendChild(loadingSearch);
+  
+  // Hide suggestions once weather data is loaded
+  const hideOnSuccess = () => {
+    searchSuggestion.classList.remove('suggestion-visible');
+    searchSuggestion.classList.add('suggestion-hidden');
+    document.removeEventListener('weather:loaded', hideOnSuccess);
+  };
+  document.addEventListener('weather:loaded', hideOnSuccess);
+}
+
 document.querySelector('.js-search-input').addEventListener('input', async (event) => {
   const searchSuggestion = document.querySelector('.js-search-suggestion');
-  if (event.target.value.length > 1) {
-    searchSuggestion.style.display = 'block';
-  } else {
-    searchSuggestion.style.display = 'none';
-  }
-
-  let cityName = event.target.value;
-  cityName = cityName.trim().replace(/\s+/g, ' ').toLowerCase();
-  let finalQuery = encodeURIComponent(cityName);
-  if (cityName.length > 1) {
-    const geocodingUrl = `https://geocoding-api.open-meteo.com/v1/search?name=${finalQuery}&count=15`;
-    fetch(geocodingUrl).then(response => response.json())
-      .then(async geocoding => {
-        if (!geocoding.results || geocoding.results.length === 0) {
-          throw new Error("City not found");
-        }
-        geocoding.results = geocoding.results.filter(result => result.country !== '');
-        document.querySelector('.js-search-suggestion').innerHTML = '';
-        for (let i = 0; i < geocoding.results.length; i++) {
-          const suggestionItem = document.createElement('p');
-          suggestionItem.textContent = `${geocoding.results[i].name === undefined ? '' : geocoding.results[i].name}, ${geocoding.results[i].admin1 === undefined ? '' : geocoding.results[i].admin1}, ${geocoding.results[i].country === undefined ? '' : geocoding.results[i].country}`;
-          suggestionItem.classList.add('js-search-suggestion-item', 'text-[0.85rem]', 'py-2', 'px-3', 'cursor-pointer', 'hover:bg-[#2121309a]');
-          // document.querySelector('.js-search-suggestion').innerHTML += suggestionItem.outerHTML;
-          document.querySelector('.js-search-suggestion').appendChild(suggestionItem);
-          suggestionItem.addEventListener('click', async () => {
-            document.querySelector('.js-search-input').value = suggestionItem.textContent;
-            searchSuggestion.style.display = 'none';
-            let {latitude, longitude} = geocoding.results[i];
-            console.log(geocoding)
-            name2 = `${geocoding.results[i].name} ${geocoding.results[i].admin1}, ${geocoding.results[i].country.length <= 7 ? geocoding.results[i].country : geocoding.results[i].country_code}`;
-            const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true&daily=weathercode,temperature_2m_max,temperature_2m_min&hourly=weathercode,temperature_2m,apparent_temperature,relative_humidity_2m,wind_speed_10m,precipitation&windspeed_unit=${selectedUnits.windSpeed}&precipitation_unit=${selectedUnits.precipitation}&temperature_unit=${selectedUnits.temperature}&timezone=auto`;
-            const weatherResponse = await fetch(weatherUrl).then(r => r.json())
-              .then(d => {
-                return d;
-              })
-            renderWeatherPage(weatherResponse);
-          });
-        }
-      }).catch(error => {
-        console.error('Uncaught error. Please check your internet connection.', error)
-      })
-    
-  }   
+  showLoadingState(searchSuggestion)
+  getWeatherSugestionData(event);
 })
 
 document.querySelector('.js-search-button').addEventListener('click', async () => {
-  document.querySelector('.js-search-suggestion').style.display = 'none';
-  let cityName = document.querySelector('.js-search-input').value;
-  cityName = cityName.trim().replace(/\s+/g, ' ').toLowerCase();
-  let finalQuery = encodeURIComponent(cityName);
-  getWeatherByCityName(finalQuery, selectedUnits)
-  /*
-  .then(weatherResponse => {
-    renderWeatherPage(weatherResponse);
-  }).catch(error => {
-    console.error('Error fetching weather data:', error);
-    alert(`Failed to fetch weather data. Please check your internet connection and try again. You entered: "${cityName}"`);
-  });
-  */
+  const cityName = document.querySelector('.js-search-input').value;
+  const searchSuggestion = document.querySelector('.js-search-suggestion');
+  
+  if (cityName.trim().length === 0) return;
+  
+  // Show loading state
+  showLoadingState(searchSuggestion)
+  
+  // Start the weather fetch
+  getWeatherByCityName(cityName);
 });
-
+/*
 window.addEventListener('load', async () => {
   try {
     // get user location and fetch weather data for that location
@@ -197,8 +216,8 @@ window.addEventListener('load', async () => {
       }).catch(error => {
         console.error('Error fetching geocoding data:', error);
       });
-    const weatherAPIUrl = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true&daily=weathercode,temperature_2m_max,temperature_2m_min&hourly=weathercode,temperature_2m,apparent_temperature,relative_humidity_2m,wind_speed_10m,precipitation&windspeed_unit=${selectedUnits.windSpeed}&precipitation_unit=${selectedUnits.precipitation}&temperature_unit=${selectedUnits.temperature}&timezone=auto`;
-    const weatherResponse = await fetch(weatherAPIUrl).then(r => r.json())
+    const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true&daily=weathercode,temperature_2m_max,temperature_2m_min&hourly=weathercode,temperature_2m,apparent_temperature,relative_humidity_2m,wind_speed_10m,precipitation&timezone=auto`;
+    const weatherResponse = await fetch(weatherUrl).then(r => r.json())
       .then(d => {
         return d;
       });
@@ -206,16 +225,20 @@ window.addEventListener('load', async () => {
     return weatherResponse;
   } catch (error) {
     console.error("Error fetching weather data on page load:", error);
-    // document.querySelector('.js-section-1').innerHTML = errorState();
+    alert("Failed to fetch weather data on page load. Please check your internet connection and allow location access to get weather information for your area.");
   }
 });
+*/
 
 window.addEventListener('offline', () => {
   document.querySelector('.js-section-1').innerHTML = errorState();
 });
 
+// Close search suggestions when clicking outside the search area
 document.body.addEventListener('click', (event) => {
-  if (!event.target.classList.contains('js-search-suggestion-item')) {
+  const clickedInSearchArea = event.target.closest('.js-search-cont');
+  const clickedInSearchButton = event.target.closest('.js-search-button');
+  if (!clickedInSearchArea && !clickedInSearchButton) {
     document.querySelector('.js-search-suggestion').style.display = 'none';
   }
 });

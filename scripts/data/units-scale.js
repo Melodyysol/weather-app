@@ -23,11 +23,11 @@ function unitsScale() {
         <p class="text-sm text-[#aeaeb7] pl-2">${unit.scale}</p>
         <label class="flex justify-between content-center cursor-pointer p-2 rounded-xl hover:bg-[#33314d96]">
           <span class="text-[1.2rem]">${unit.unit1}</span>
-          <input type="radio" name="${unit.name}" checked class="w-10 bg-transparent border-none">
+          <input type="checkbox" name="${unit.name}" checked class="w-10 bg-transparent border-none appearance-none checked:before:content-['✓'] checked:before:text-white">
         </label>
         <label class="flex justify-between content-center cursor-pointer p-2 rounded-xl hover:bg-[#33314d96] my-2">
           <span class="text-[1.2rem]">${unit.unit2}</span>
-          <input type="radio" name="${unit.name}" class="w-10 bg-transparent border-none">
+          <input type="checkbox" name="${unit.name}" class="w-10 bg-transparent border-none appearance-none checked:before:content-['✓'] checked:before:text-white">
         </label>
       </div>
     `

@@ -61,7 +61,7 @@ function extralInfomation(response) {
       html += `
         <div class="bg-[#3d3b5e] flex flex-col gap-y-2 rounded-xl px-4 py-2 min-w-30 text-left border border-gray-600">
           <p class="text-[0.84rem] font-extralight">${e.type}</p>
-          <p class="text-[1.6rem] font-extralight">${e.value}</p>
+          <p class="js-${e.id} text-[1.6rem] font-extralight">${e.value}</p>
         </div>
       `
     })
@@ -89,7 +89,7 @@ function dailyForecastFun(response) {
         <p class="text-[0.84rem] font-extralight">${day}</p>
         <img src="weather-app-main/assets/images/icon-${weatherDescription}.webp" alt="${weatherDescription} icon" class="w-15 m-auto">
         <div class="flex justify-around text-[0.84rem] font-extralight">
-          <span>${maxTemp}&deg;</span><span>${minTemp}&deg;</span>
+          <span class="js-daily-max-temp">${maxTemp}&deg;</span><span class="js-daily-min-temp">${minTemp}&deg;</span>
         </div>
       </div>
     `;
