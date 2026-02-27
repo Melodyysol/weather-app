@@ -100,10 +100,17 @@ function extralInfomation(response, units = selectedUnits) {
   return extralInfo();
 }
 
+// Store current response for day selection
+let currentWeatherResponse = null;
+
 function dailyForecastFun(response, units = selectedUnits) {
   let dailyForecastHTML = '';
   if (response) {
+    currentWeatherResponse = response; // Store for day selection
     let dailyForecast = response.daily;
+    let date = response.current_weather.time;
+    let dateObj = new Date(date);
+    document.querySelector('.js-hourly-day').innerHTML = dateObj.toLocaleDateString('en-US', { weekday: 'long'});
     const tempUnit = units.temperature === 'celsius' ? '&degC' : '&degF';
     for (let i = 0; i < dailyForecast.time.length; i++) {
       const time = dailyForecast.time[i];
@@ -114,9 +121,8 @@ function dailyForecastFun(response, units = selectedUnits) {
       const minTemp = dailyForecast.temperature_2m_min[i].toFixed(0);
       const weatherCode = dailyForecast.weathercode[i];
       const weatherDescription = getWeatherDescription(weatherCode);
-      // console.log(day, maxTemp, minTemp, weatherCode, weatherDescription);
       dailyForecastHTML += `
-        <div class="bg-[#3d3b5e] flex flex-col gap-y-2 rounded-xl py-4 text-center border border-gray-600">
+        <div class="js-day-card bg-[#3d3b5e] flex flex-col gap-y-2 rounded-xl py-4 text-center border border-gray-600 cursor-pointer hover:opacity-80" data-day-index="${i}">
           <p class="text-[0.84rem] font-extralight">${day}</p>
           <img src="weather-app-main/assets/images/icon-${weatherDescription}.webp" alt="${weatherDescription} icon" class="w-15 m-auto">
           <div class="flex justify-around text-[0.84rem] font-extralight">
@@ -125,6 +131,40 @@ function dailyForecastFun(response, units = selectedUnits) {
         </div>
       `;
     }
+    document.querySelector('.js-daily-cont').addEventListener('click', () => {
+      const daysOfWeek = dailyForecast.time.map((t, idx) => {
+        const d = new Date(t);
+        return { day: d.toLocaleDateString('en-US', { weekday: 'long' }), index: idx };
+      });
+      const dropdown = document.querySelector('.js-display-dropdown');
+      dropdown.innerHTML = '';
+      daysOfWeek.forEach(({ day, index }) => {
+        const dayElement = document.createElement('div');
+        dayElement.classList.add('js-day', 'hover:bg-[#2121309a]', 'cursor-pointer', 'p-2', 'pl-4', 'rounded-md');
+        dayElement.textContent = day;
+        dayElement.addEventListener('click', (e) => {
+          e.stopPropagation();
+          console.debug('Day selected:', day, 'Index:', index);
+          document.querySelector('.js-hourly-day').textContent = day;
+          
+          // Update hourly forecast
+          const hourlyHTML = hourlyForecastFun(currentWeatherResponse, units, index);
+          document.querySelector('.js-hourly-cont').innerHTML = hourlyHTML;
+          
+          dropdown.classList.add('hidden');
+          dropdown.classList.remove('flex');
+        });
+        dropdown.appendChild(dayElement);
+      });
+      let isDropdownVisible = dropdown.classList.contains('hidden') ? false : true;
+      if (isDropdownVisible) {
+        dropdown.classList.add('hidden');
+        dropdown.classList.remove('flex');
+      } else {
+        dropdown.classList.remove('hidden');
+        dropdown.classList.add('flex');
+      }
+    });
   }else {
     for (let i = 0; i < 7; i++) {
       dailyForecastHTML += `
@@ -138,29 +178,69 @@ function dailyForecastFun(response, units = selectedUnits) {
   return dailyForecastHTML;
 }
 
-function hourlyForecastFun(response, units = selectedUnits) {
+function hourlyForecastFun(response, units = selectedUnits, dayIndex = 0) {
   let hourlyForecastHTML = '';
   if (response) {
     let hourlyForecast = response.hourly;
+    let dailyForecast = response.daily;
     const tempUnit = units.temperature === 'celsius' ? '&degC' : '&degF';
+    const currentDate = new Date();
+    const currentHour = currentDate.getHours();
+    
+    // Get the date for the selected day
+    const selectedDayDate = new Date(dailyForecast.time[dayIndex]);
+    const selectedYear = selectedDayDate.getFullYear();
+    const selectedMonth = selectedDayDate.getMonth();
+    const selectedDay = selectedDayDate.getDate();
+    
+    // Filter hourly data for the selected day starting from current hour
+    let startIndex = -1;
+    for (let i = 0; i < hourlyForecast.time.length; i++) {
+      const d = new Date(hourlyForecast.time[i]);
+      if (d.getFullYear() === selectedYear && 
+          d.getMonth() === selectedMonth && 
+          d.getDate() === selectedDay &&
+          d.getHours() >= currentHour) {
+        startIndex = i;
+        break;
+      }
+    }
+    
+    // If no hours found from current hour onwards, start from midnight of that day
+    if (startIndex === -1) {
+      startIndex = hourlyForecast.time.findIndex(t => {
+        const d = new Date(t);
+        return d.getFullYear() === selectedYear && 
+               d.getMonth() === selectedMonth && 
+               d.getDate() === selectedDay;
+      });
+    }
+    
+    const endIndex = startIndex + 8; // 8 hours
+    const filteredTime = hourlyForecast.time.slice(startIndex, endIndex);
+    const filteredTemperature = hourlyForecast.temperature_2m.slice(startIndex, endIndex);
+    const filteredWeatherCode = hourlyForecast.weathercode.slice(startIndex, endIndex);
+    
+    // Display 8 hours starting from current hour
     for (let i = 0; i < 8; i++) {
-      const time = hourlyForecast.time[i];
-      const date = new Date(time);
-      const options = { hour: 'numeric', hour12: true };
-      const hour = date.toLocaleTimeString('en-US', options);
-      const temperature = hourlyForecast.temperature_2m[i].toFixed(0);
-      const weatherCode = hourlyForecast.weathercode[i];
-      const weatherDescription = getWeatherDescription(weatherCode);
-      // console.log(hour, temperature, weatherCode, weatherDescription);
-      hourlyForecastHTML += `
-        <div class="bg-[#3d3b5e] flex justify-between content-center px-2 rounded-md border border-gray-600">
-          <div class="flex items-center py-2 content-center gap-x-2">
-            <img src="weather-app-main/assets/images/icon-${weatherDescription}.webp" alt="${weatherDescription} icon" class="w-10">
-            <span class="text-[0.85rem]">${hour}</span>
+      if (filteredTime[i]) {
+        const time = filteredTime[i];
+        const date = new Date(time);
+        const options = { hour: 'numeric', hour12: true };
+        const hour = date.toLocaleTimeString('en-US', options);
+        const temperature = filteredTemperature[i].toFixed(0);
+        const weatherCode = filteredWeatherCode[i];
+        const weatherDescription = getWeatherDescription(weatherCode);
+        hourlyForecastHTML += `
+          <div class="bg-[#3d3b5e] flex justify-between content-center px-2 rounded-md border border-gray-600">
+            <div class="flex items-center py-2 content-center gap-x-2">
+              <img src="weather-app-main/assets/images/icon-${weatherDescription}.webp" alt="${weatherDescription} icon" class="w-10">
+              <span class="text-[0.85rem]">${hour}</span>
+            </div>
+            <span class="text-[0.85rem] pt-5">${temperature}${tempUnit}</span>
           </div>
-          <span class="text-[0.85rem] pt-5">${temperature}${tempUnit}</span>
-        </div>
-      `;
+        `;
+      }
     }
   }else {
     for (let i = 0; i < 8; i++) {

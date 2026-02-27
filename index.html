@@ -31,9 +31,11 @@
       <div class="bg-[#3d3b5e9a] flex flex-col gap-y-2 rounded-xl py-4 px-4 mt-6">
         <div class="flex justify-between items-center mb-4">
           <span class="text-[0.85rem]">Hourly forecast</span>
-          <div class="cursor-pointer bg-[#3d3b5e] flex justify-center gap-x-2 w-25 content-center py-2 rounded-md">
-            <span class="text-[0.75rem]">Tuesday</span>
+          <div class="js-daily-cont relative cursor-pointer bg-[#3d3b5e] flex justify-center gap-x-2 w-25 content-center py-2 rounded-md">
+            <span class="js-hourly-day text-[0.75rem]"></span>
             <img  src="weather-app-main/assets/images/icon-dropdown.svg" alt="Dropdown Icon">
+            <div class="js-display-dropdown absolute bg-[#2f2d4a] flex-col gap-y-3 border border-[#4a486f] w-48 p-2 rounded-lg top-10 right-0 hidden">
+            </div>
           </div>
         </div>
         <div class="js-hourly-cont content-center justify-center grid grid-cols-1 gap-4"></div>
