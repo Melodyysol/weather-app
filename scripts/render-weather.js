@@ -214,7 +214,7 @@ export function renderWeatherPage(response) {
               <h1 class="js-temperature text-[4.5rem] italic mt-4 lg:mt-7">${temperature}${selectedUnits.temperature === 'celsius' ? '&deg;C' : '&deg;F'}</h1>
             </div>
           </div>
-          <img src="weather-app-main/assets/images/bg-today-large.svg" alt="Large Background" class="relative">
+          <img src="weather-app-main/assets/images/bg-today-large.svg" alt="Large Background" class="relative -z-10">
         </div>
         <div class="content-center justify-center grid grid-cols-2 gap-4 mt-6 md:grid-cols-4">${extralInfomation(response, selectedUnits)}</div>
         <div class="mt-5">
